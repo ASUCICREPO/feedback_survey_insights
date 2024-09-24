@@ -77,7 +77,7 @@ def lambda_handler(event, context):
     if validation_result == "Invalid":
         return {
             'statusCode': 400,
-            'body': {'error': 'Invalid query. Please ask about the Advocate Health Employee survey.'},
+            'body': {'error': 'Invalid query. Please ask about the survey.'},
             'headers': {
                 'Content-Type': 'application/json'
             }
