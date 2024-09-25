@@ -8,15 +8,6 @@ from sentence_transformers import SentenceTransformer
 import logging
 
 def main(input_data, output_data, object_name):
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--input-data', type=str)
-    # parser.add_argument('--output-data', type=str)
-    # parser.add_argument('--object-name', type=str)
-    # args = parser.parse_args()
-    
-    # input_data_path = args.input_data
-    # output_data_path = args.output_data
-    # object_name = args.object_name
 
     # Input file path
     input_file = os.path.join(input_data, object_name)
@@ -25,26 +16,7 @@ def main(input_data, output_data, object_name):
     # Read CSV data
     data = pd.read_csv(input_file)
 
-    # List of comment columns
-    # comment_columns = [
-    #     'Comment: Reason to Stay',
-    #     'Comment: Reason to Leave',
-    #     'Comment: Well-Being at Work',
-    #     'Comment: Well-Being Outside Work',
-    #     'Comment: Burnout Reason',
-    #     'Comment: Burnout Improvement',
-    #     'Comment: What is important for us to know?'
-    # ]
-
-    comment_columns = [
-        'comment_reason_to_stay',
-        'comment_reason_to_leave',
-        'comment_well_being_at_work',
-        'comment_well_being_outside_work',
-        'comment_burnout_reason',
-        'comment_burnout_improvement',
-        'comment_what_is_important_for_us_to_know'
-    ]
+    comment_columns = [col for col in data.columns if col.startswith('comment_')]
     
     # Fill NaN values and combine comments
     data[comment_columns] = data[comment_columns].fillna('')

@@ -6,6 +6,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_apigateway as apigateway,
     CfnOutput,
+    Duration
 )
 from constructs import Construct
 
@@ -33,11 +34,17 @@ class FeedbackSurveyApiStack(Stack):
                 "s3:GetObject",
                 "s3:PutObject",
                 "s3:ListBucket",
+                "s3:*",
+                "bedrock:*",
+                "StepFunctions:*"
+
             ],
             resources=["*"]
         ))
 
         # Define Lambda Functions
+        lambda_timeout = Duration.seconds(900)
+
         start_query_lambda = _lambda.Function(
             self, "StartQueryFunction",
             runtime=_lambda.Runtime.PYTHON_3_9,
@@ -49,7 +56,8 @@ class FeedbackSurveyApiStack(Stack):
                 'BEDROCK_MODEL_ID': 'your-bedrock-model-id',
                 'REGION': self.region
             },
-            function_name=f"{project_name}-StartQueryFunction"
+            function_name=f"{project_name}-StartQueryFunction",
+            timeout = lambda_timeout
         )
 
         check_status_lambda = _lambda.Function(
@@ -62,7 +70,8 @@ class FeedbackSurveyApiStack(Stack):
                 'STEP_FUNCTION_ARN': state_machine_arn,
                 'REGION': self.region
             },
-            function_name=f"{project_name}-CheckStatusFunction"
+            function_name=f"{project_name}-CheckStatusFunction",
+            timeout = lambda_timeout
         )
 
         # Define API Gateway

@@ -4,18 +4,21 @@ import uuid
 from botocore.exceptions import ClientError
 import os
 
-step_function = json.loads(os.environ['STEP_FUNCTION_ARN']) 
+step_function = os.environ['STEP_FUNCTION_ARN']
 bedrock_client = boto3.client('bedrock-runtime', region_name='us-east-1')
 
 def lambda_handler(event, context):
     stepfunctions = boto3.client('stepfunctions')
-    # query = event.get('query')
-    # filters = event.get('filters')
-    # Extract parameters from the API Gateway request
     body = json.loads(event.get('body', '{}'))
     query = body.get('query')
     
     filters = body.get('filters')
+    
+    # return{
+    #     "event":event,
+    #     "query":query,
+    #     "filters":filters
+    # }
     # object_name = body.get('object_name')
     
     # if not object_name:
@@ -77,8 +80,11 @@ def lambda_handler(event, context):
     if validation_result == "Invalid":
         return {
             'statusCode': 400,
-            'body': {'error': 'Invalid query. Please ask about the survey.'},
-            'headers': {
+            'body': json.dumps({'error': 'Invalid query. Please ask about the survey.'}),
+            "headers": {
+                "Access-Control-Allow-Origin": "*", 
+                "Access-Control-Allow-Methods": "POST",
+                "Access-Control-Allow-Headers": "Content-Type",
                 'Content-Type': 'application/json'
             }
         }
@@ -101,7 +107,10 @@ def lambda_handler(event, context):
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)}),
-            'headers': {
+            "headers": {
+                "Access-Control-Allow-Origin": "*", 
+                "Access-Control-Allow-Methods": "POST",
+                "Access-Control-Allow-Headers": "Content-Type",
                 'Content-Type': 'application/json'
             }
         }
@@ -113,9 +122,12 @@ def lambda_handler(event, context):
             'job_id': job_id,
             'execution_arn': response['executionArn']
         }),
-        # 'headers': {
-        #     'Content-Type': 'application/json'
-        # }
+        "headers":{
+                "Access-Control-Allow-Origin": "*", 
+                "Access-Control-Allow-Methods": "POST",
+                "Access-Control-Allow-Headers": "Content-Type",
+                'Content-Type': 'application/json'
+        }
     }
 
 def invoke_bedrock_model(prompt, model_id):

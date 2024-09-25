@@ -6,9 +6,9 @@ from io import StringIO
 from botocore.exceptions import ClientError
 import os
 
-bucket = json.loads(os.environ['BUCKET_NAME']) 
+bucket = os.environ['BUCKET_NAME']
 bedrock_client = boto3.client('bedrock-runtime', region_name='us-east-1')
-COMMENT_COLUMNS = json.loads(os.environ['COMMENT_COLUMNS'])
+# COMMENT_COLUMNS = os.environ['COMMENT_COLUMNS']
 
 def invoke_bedrock_model(prompt, model_id):
     # model_id = "anthropic.claude-3-haiku-20240307-v1:0"

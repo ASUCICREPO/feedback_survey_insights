@@ -32,5 +32,9 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({"message": "Multipart upload completed successfully"}),
-        "headers": {}
+        "headers": {
+            "Access-Control-Allow-Origin": "*", 
+            "Access-Control-Allow-Methods": "POST",
+            "Access-Control-Allow-Headers": "Content-Type"
+            }
     }

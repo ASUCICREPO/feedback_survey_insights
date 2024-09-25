@@ -2,22 +2,27 @@ import json
 import boto3
 import os
 
-step_function = json.loads(os.environ['STEP_FUNCTION_ARN'])   
+step_function = os.environ['STEP_FUNCTION_ARN']
 
 def lambda_handler(event, context):
     stepfunctions = boto3.client('stepfunctions')
     
+    
     # Get job_id from query parameters
     job_id = event['queryStringParameters'].get('jobId')
-    # job_id = "2d5b475a-20c0-4240-91d3-ec09291b5355"
+    # job_id = "065799ec-4db6-4f5a-9100-2363879dbf9f"
+    execution_name = f"processing-job-{job_id}"
+    executionArn=f"{step_function.replace('stateMachine', 'execution')}:{execution_name}"
     
     if not job_id:
         return {
             'statusCode': 400,
             'body': json.dumps({'error': 'jobId is required'}),
-            'headers': {
-                'Content-Type': 'application/json'
-            }
+            "headers": {
+                        "Access-Control-Allow-Origin": "*", 
+                        "Access-Control-Allow-Methods": "POST",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                        }
         }
     
     # Construct execution name from job_id
@@ -26,9 +31,10 @@ def lambda_handler(event, context):
     # Describe the execution
     try:
         response = stepfunctions.describe_execution(
-            executionArn=f"{step_function}:{execution_name}"
+            executionArn=f"{step_function.replace('stateMachine', 'execution')}:{execution_name}"
         )
         
+        print(executionArn)
         status = response['status']
         output = response.get('output', None)
         
@@ -52,9 +58,11 @@ def lambda_handler(event, context):
                 return {
                     'statusCode': 200,
                     'body': json.dumps(result),
-                    'headers': {
-                        'Content-Type': 'application/json'
-                    }
+                    "headers": {
+                        "Access-Control-Allow-Origin": "*", 
+                        "Access-Control-Allow-Methods": "POST",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                        }
                 }
             else:
                 return {
@@ -71,24 +79,33 @@ def lambda_handler(event, context):
         return {
             'statusCode': 200,
             'body': json.dumps(result),
-            'headers': {
-                'Content-Type': 'application/json'
-            }
+            # 'headers': {
+            #     'Content-Type': 'application/json'
+            # }
+            "headers": {
+                        "Access-Control-Allow-Origin": "*", 
+                        "Access-Control-Allow-Methods": "POST",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                        }
         }
         
     except stepfunctions.exceptions.ExecutionDoesNotExist:
         return {
             'statusCode': 404,
             'body': json.dumps({'error': 'Job not found'}),
-            'headers': {
-                'Content-Type': 'application/json'
-            }
+            "headers": {
+                        "Access-Control-Allow-Origin": "*", 
+                        "Access-Control-Allow-Methods": "POST",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                        }
         }
     except Exception as e:
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)}),
-            'headers': {
-                'Content-Type': 'application/json'
-            }
+            "headers": {
+                        "Access-Control-Allow-Origin": "*", 
+                        "Access-Control-Allow-Methods": "POST",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                        }
         }

@@ -29,7 +29,15 @@ class FeedbackSurveyInsightsStack(Stack):
             bucket_name=bucket_name,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True
+            auto_delete_objects=True,
+            cors=[ 
+                s3.CorsRule(
+                    allowed_headers=["*"],
+                    allowed_methods=[s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST],
+                    allowed_origins=["*"],
+                    exposed_headers=["ETag"]
+                )
+            ]
         )
 
         # Create the 'raw/' folder by uploading an empty object

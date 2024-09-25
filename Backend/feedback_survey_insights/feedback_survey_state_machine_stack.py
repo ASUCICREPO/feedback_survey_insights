@@ -1,5 +1,3 @@
-# feedback_survey_state_machine_stack.py
-
 from aws_cdk import (
     Stack,
     aws_s3 as s3,
@@ -8,16 +6,12 @@ from aws_cdk import (
     aws_stepfunctions as sfn,
     aws_stepfunctions_tasks as tasks,
     aws_glue as glue,
-    aws_ec2 as ec2,
     Duration,
-    Size,
     CfnOutput,
 )
 from constructs import Construct
-import os
 import json
 from aws_cdk.aws_stepfunctions import DefinitionBody
-
 
 class FeedbackSurveyStateMachineStack(Stack):
 
@@ -100,7 +94,7 @@ class FeedbackSurveyStateMachineStack(Stack):
                 "sagemaker:CreateProcessingJob",
                 "sagemaker:DescribeProcessingJob",
                 "sagemaker:*",
-                "ecr:*"
+                "ecs:*"
             ],
             resources=["*"]
         ))
@@ -119,7 +113,8 @@ class FeedbackSurveyStateMachineStack(Stack):
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:BatchGetImage",
                 "ecr:BatchCheckLayerAvailability",
-                "s3:*"
+                "s3:*",
+                "sagemaker:*"
             ],
             resources=["*"]  # Or restrict to the specific ECR repository ARN
         ))
@@ -133,7 +128,7 @@ class FeedbackSurveyStateMachineStack(Stack):
         )
 
         # Common timeout configuration
-        lambda_timeout = Duration.seconds(3600)  # Adjust the timeout as needed
+        lambda_timeout = Duration.seconds(600)  # Adjust the timeout as needed
 
         process_query_lambda = _lambda.Function(
             self, "ProcessQueryFunction",
@@ -167,98 +162,177 @@ class FeedbackSurveyStateMachineStack(Stack):
             layers=[pandas_layer]  # Attach the Pandas layer
         )
 
-        start_sagemaker_processing_lambda = _lambda.Function(
-            self, "StartSageMakerProcessingJobFunction",
-            runtime=_lambda.Runtime.PYTHON_3_12,
-            handler="start_sagemaker_processing.lambda_handler",
-            code=_lambda.Code.from_asset("lambda_functions/start_sagemaker_processing"),
-            role=lambda_role,
-            environment={
-                'BUCKET_NAME': data_bucket.bucket_name,
-                'DOCKER_IMAGE_URI': docker_image_uri,
-                'SAGEMAKER_ROLE_ARN': sagemaker_role.role_arn,
-                'REGION': self.region
-            },
-            function_name=f"{project_name}-StartSageMakerProcessingJobFunction",
-            timeout=lambda_timeout  # Increased timeout
+        # -------------------------------------------------------------------------
+        state_machine_role = iam.Role(
+            self, "StateMachineExecutionRole",
+            assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
         )
 
-        # Define Step Function Tasks
-        process_query_task = tasks.LambdaInvoke(
-            self, "StartProcessingJob",
-            lambda_function=process_query_lambda,
-            output_path="$.Payload",
-            result_path="$.processing_job"
+        # Attach policies to allow state machine creation and CloudWatch event rule management
+        state_machine_role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name("AWSStepFunctionsFullAccess")
         )
 
-        process_query_task.add_catch(
-            handler=self.create_handle_general_error("ProcessQueryTask"),
-            errors=["States.ALL"],
-            result_path="$.error_info"
+        state_machine_role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSageMakerFullAccess")
         )
 
-        sagemaker_task = tasks.LambdaInvoke(
-            self, "StartSageMakerProcessingJob",
-            lambda_function=start_sagemaker_processing_lambda,
-            input_path="$.processing_job",
-            output_path="$.Payload",
-            result_path="$.sagemaker_job"
+        state_machine_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "events:PutRule",
+                    "events:DeleteRule",
+                    "events:DescribeRule",
+                    "events:PutTargets",
+                    "events:RemoveTargets"
+                ],
+                resources=["*"]
+            )
         )
 
-        sagemaker_task.add_catch(
-            handler=self.create_handle_general_error("SageMakerTask"),
-            errors=["States.ALL"],
-            result_path="$.error_info"
-        )
+        # Define the state machine definition with dynamic Lambda ARNs and SageMaker
+        state_machine_definition = f"""
+        {{
+          "Comment": "State Machine for Employee Survey Processing",
+          "StartAt": "StartProcessingJob",
+          "States": {{
+            "StartProcessingJob": {{
+              "Type": "Task",
+              "Resource": "{process_query_lambda.function_arn}",
+              "Parameters": {{
+                "query.$": "$.query",
+                "filters.$": "$.filters"
+              }},
+              "Catch": [
+                {{
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "HandleGeneralError"
+                }}
+              ],
+              "ResultSelector": {{
+                "job_id.$": "$.job_id",
+                "query.$": "$.query",
+                "filters.$": "$.filters",
+                "object_name.$": "$.object_name"
+              }},
+              "ResultPath": "$.processing_job",
+              "Next": "SageMakerCreateProcessingJob"
+            }},
+            "SageMakerCreateProcessingJob": {{
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sagemaker:createProcessingJob.sync",
+              "Parameters": {{
+                "AppSpecification": {{
+                  "ImageUri": "{docker_image_uri}",
+                  "ContainerEntrypoint": [
+                    "python3",
+                    "/opt/ml/processing/input/code/processing_script.py"
+                  ],
+                  "ContainerArguments.$": "States.Array('--input-data', '/opt/ml/processing/input/data', '--output-data', '/opt/ml/processing/output', '--object-name', $.processing_job.object_name)"
+                }},
+                "ProcessingInputs": [
+                  {{
+                    "InputName": "input-data",
+                    "S3Input": {{
+                      "S3Uri": "s3://{bucket_name}/filter/",
+                      "LocalPath": "/opt/ml/processing/input/data",
+                      "S3DataType": "S3Prefix",
+                      "S3InputMode": "File"
+                    }}
+                  }},
+                  {{
+                    "InputName": "code",
+                    "S3Input": {{
+                      "S3Uri": "https://{bucket_name}.s3.us-west-2.amazonaws.com/scripts/processing_script.py",
+                      "LocalPath": "/opt/ml/processing/input/code",
+                      "S3DataType": "S3Prefix",
+                      "S3InputMode": "File"
+                    }}
+                  }}
+                ],
+                "ProcessingOutputConfig": {{
+                  "Outputs": [
+                    {{
+                      "OutputName": "output-data",
+                      "S3Output": {{
+                        "S3Uri": "s3://{bucket_name}/processed/",
+                        "LocalPath": "/opt/ml/processing/output",
+                        "S3UploadMode": "EndOfJob"
+                      }}
+                    }}
+                  ]
+                }},
+                "ProcessingResources": {{
+                  "ClusterConfig": {{
+                    "InstanceCount": 1,
+                    "InstanceType": "ml.c5.xlarge",
+                    "VolumeSizeInGB": 10
+                  }}
+                }},
+                "RoleArn": "{sagemaker_role.role_arn}",
+                "ProcessingJobName.$": "States.Format('processing-job-{{}}', $.processing_job.job_id)",
+                "StoppingCondition": {{
+                  "MaxRuntimeInSeconds": 3600
+                }}
+              }},
+              "ResultPath": "$.sagemaker_job",
+              "Next": "InvokeLambda2",
+              "Catch": [
+                {{
+                  "ErrorEquals": [
+                    "States.Runtime"
+                  ],
+                  "ResultPath": "$.error_info",
+                  "Next": "HandleGeneralError"
+                }}
+              ]
+            }},
+            "InvokeLambda2": {{
+              "Type": "Task",
+              "Resource": "{generate_insights_lambda.function_arn}",
+              "Parameters": {{
+                "job_id.$": "$.processing_job.job_id",
+                "query.$": "$.processing_job.query",
+                "filters.$": "$.processing_job.filters"
+              }},
+              "ResultPath": "$.lambda2_result",
+              "End": true,
+              "Catch": [
+                {{
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "ResultPath": "$.error_info",
+                  "Next": "HandleGeneralError"
+                }}
+              ]
+            }},
+            "HandleGeneralError": {{
+              "Type": "Pass",
+              "Result": "Possible scenarios: The filters you selected returned no data. Please try changing the filters and try again. Alternatively, there may be an internal server issue. Please try again later.",
+              "Next": "FailWithMessage"
+            }},
+            "FailWithMessage": {{
+              "Type": "Fail",
+              "Error": "GeneralProcessingError",
+              "Cause": "Possible scenarios: The filters you selected returned no data. Please try changing the filters and try again. Alternatively, there may be an internal server issue. Please try again later."
+            }}
+          }}
+        }}
+        """
 
-        generate_insights_task = tasks.LambdaInvoke(
-            self, "InvokeLambda2",
-            lambda_function=generate_insights_lambda,
-            output_path="$.Payload",
-            result_path="$.lambda2_result"
-        )
-
-        generate_insights_task.add_catch(
-            handler=self.create_handle_general_error("GenerateInsightsTask"),
-            errors=["States.ALL"],
-            result_path="$.error_info"
-        )
-
-        # Define the Step Function Workflow
-        definition = process_query_task.next(sagemaker_task).next(generate_insights_task)
-
-        # Create the State Machine using definition_body
+        # Create the State Machine using the hardcoded JSON
         state_machine = sfn.StateMachine(
             self, "FeedbackSurveyStateMachine",
-            definition_body=DefinitionBody.from_chainable(definition),
-            timeout=Duration.minutes(30)
+            definition_body=DefinitionBody.from_string(state_machine_definition),
+            timeout=Duration.minutes(30),
+            role=state_machine_role
         )
 
         # Store the state machine ARN as an instance variable
         self.state_machine_arn = state_machine.state_machine_arn
 
-        # Optionally, output the state machine ARN
+        # Output the state machine ARN
         CfnOutput(self, "StateMachineArnOutput", value=state_machine.state_machine_arn, export_name="StateMachineArn")
-
-    def create_handle_general_error(self, id_suffix: str):
-        # Define a Pass state for handling general errors with a unique name
-        handle_general_error = sfn.Pass(
-            self, f"HandleGeneralError_{id_suffix}",
-            parameters={
-                "Error.$": "$.Error",
-                "Cause.$": "$.Cause"
-            },
-            result_path="$.error_info"
-        )
-
-        # Define a Fail state with a unique name
-        fail_with_message = sfn.Fail(
-            self, f"FailWithMessage_{id_suffix}",
-            error="GeneralProcessingError",
-            cause="Possible scenarios: The filters you selected returned no data. Please try changing the filters and try again. Alternatively, there may be an internal server issue. Please try again later."
-        )
-
-        # Link the Pass state to the Fail state
-        handle_general_error.next(fail_with_message)
-
-        return handle_general_error

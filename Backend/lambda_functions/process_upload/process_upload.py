@@ -33,11 +33,19 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "body": json.dumps({"presignedUrls": presigned_urls}),
-            "headers": {}
+            "headers": {
+            "Access-Control-Allow-Origin": "*", 
+            "Access-Control-Allow-Methods": "POST",
+            "Access-Control-Allow-Headers": "Content-Type"
+            }
         }
     except Exception as e:
         return {
             "statusCode": 500,
             "body": json.dumps({"error": str(e)}),
-            "headers": {}
+            "headers": {
+            "Access-Control-Allow-Origin": "*", 
+            "Access-Control-Allow-Methods": "POST",
+            "Access-Control-Allow-Headers": "Content-Type"
+            }
         }
