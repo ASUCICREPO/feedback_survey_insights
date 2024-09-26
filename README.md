@@ -23,28 +23,28 @@ By following the steps, users can seamlessly process large datasets and receive 
 - Docker installed on your machine.
 - AWS Account with permissions for ECR, Lambda, S3, Step Functions, and SageMaker.
 
-### Step 1: Pull and Upload Docker Image to AWS ECR
+- ### Step 1: Pull and Upload Docker Image to AWS ECR
     We will use a pre-configured Docker image that includes all necessary packages for processing feedback surveys using SageMaker.
 
-    #### 1.1. Pull Docker Image from DockerHub
+    - #### 1.1. Pull Docker Image from DockerHub
     Run the following command to pull the custom Docker image:
 
     ```bash
     docker pull btalachi/processing-sagemaker-image:latest
     ```
-    #### 1.2. Create an AWS ECR Repository
+    - #### 1.2. Create an AWS ECR Repository
     Next, we need to create an ECR repository where this image will be stored.
 
     ```bash
     aws ecr create-repository --repository-name sagemaker-processing-image --region <your-region>
     ```
-    #### 1.3. Authenticate Docker to ECR
+    - #### 1.3. Authenticate Docker to ECR
     You must authenticate Docker to your ECR repository. Run the following command:
 
     ```bash
     aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<your-region>.amazonaws.com
     ```
-    #### 1.4. Tag and Push Docker Image to ECR
+    - #### 1.4. Tag and Push Docker Image to ECR
     Tag your Docker image to match your ECR repository URI:
 
     ```bash
@@ -55,7 +55,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     ```bash
     docker push <aws-account-id>.dkr.ecr.<your-region>.amazonaws.com/sagemaker-processing-image:latest
     ```
-    #### 1.5. Final ECR Image URI
+    - #### 1.5. Final ECR Image URI
     The final Docker image URI in ECR will look like:
 
     ```bash
@@ -64,8 +64,8 @@ By following the steps, users can seamlessly process large datasets and receive 
 
     You will use this URI in the CDK configuration.
 
-### Step 2: Download and Configure the Backend
-    #### 2.1. Clone the Repository
+- ### Step 2: Download and Configure the Backend
+    - #### 2.1. Clone the Repository
     Clone the GitHub repository to your local environment:
 
     ```bash
@@ -73,7 +73,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     cd feedback-survey-insights
     ```
 
-    #### 2.2. Modify cdk.json
+    - #### 2.2. Modify cdk.json
     Inside the backend folder, you will find a cdk.json file. You need to modify the context variables according to your configuration.
 
     Example cdk.json:
@@ -104,15 +104,15 @@ By following the steps, users can seamlessly process large datasets and receive 
     - docker_image_uri: The URI of your Docker image from AWS ECR.
     - headers: The headers of your CSV file. Make sure they follow a consistent naming convention (no special characters), and comment-related columns should start with Comment:.
 
-### Step 3: Deploy the CDK Stack
+- ### Step 3: Deploy the CDK Stack
     After making the necessary changes, you can deploy the CDK stack.
 
-    #### 3.1. Bootstrap AWS CDK (First-Time Setup)
+    - #### 3.1. Bootstrap AWS CDK (First-Time Setup)
 
     ```bash
     cdk bootstrap
     ```
-    #### 3.2. Deploy the Backend Stack
+    - #### 3.2. Deploy the Backend Stack
     To deploy the infrastructure:
 
     ```bash
@@ -126,7 +126,7 @@ By following the steps, users can seamlessly process large datasets and receive 
 
     This will set up all the necessary AWS resources, including Lambda functions, S3 buckets, API Gateway, Step Functions, Glue, and SageMaker processing jobs.
 
-### Step 4: Troubleshooting
+- ### Step 4: Troubleshooting
     If you face any issues during the Docker image upload process or the CDK deployment, refer to the following AWS documentation:
 
     [AWS CDK Documentation](https://docs.aws.amazon.com/cdk/latest/guide/home.html).
