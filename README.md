@@ -1,15 +1,15 @@
 # Feedback Survey Insights
 
-The Feedback Survey Insights Project is a complete cloud-native deployment solution designed to process large-scale employee feedback surveys efficiently. This system leverages multiple AWS services, including Amazon SageMaker, AWS Bedrock, AWS Lambda, S3, and API Gateway, to provide an end-to-end architecture for deep insights generation, recommendations, and summaries from survey data.
+The Feedback Survey Insights Project is a complete cloud-native deployment solution designed to process large-scale feedback surveys efficiently. This system leverages multiple AWS services, including Amazon SageMaker, AWS Bedrock, AWS Lambda, S3, and API Gateway, to provide an end-to-end architecture for deep insights generation, recommendations, and summaries from survey data.
 
 ## Key Features:
-Amazon SageMaker: Executes Machine Learning algorithm DBSCAN (Density-Based Spatial Clustering of Applications with Noise), for clustering survey comments. This helps in identifying recurring themes in feedback.
+1. Amazon SageMaker: Executes Machine Learning algorithm DBSCAN (Density-Based Spatial Clustering of Applications with Noise), for clustering survey comments. This helps in identifying recurring themes in feedback.
 
-AWS Bedrock: Calls LLMs through AWS Bedrock to generate contextual insights and human-readable summaries from the clustered feedback data. This ensures actionable recommendations based on the clustered patterns.
+2. AWS Bedrock: Calls LLMs through AWS Bedrock to generate contextual insights and human-readable summaries from the clustered feedback data. This ensures actionable recommendations based on the clustered patterns.
 
-AWS Lambda & API Gateway: Lambda functions coordinate the workflow and interact with the APIs. These APIs, exposed via API Gateway, are used to trigger data processing jobs, check their status, and retrieve the final insights and summaries. Once the APIs are deployed, users will receive the API URLs as output, allowing them to make requests and interact with the system dynamically.
+3. AWS Lambda & API Gateway: Lambda functions coordinate the workflow and interact with the APIs. These APIs, exposed via API Gateway, are used to trigger data processing jobs, check their status, and retrieve the final insights and summaries. Once the APIs are deployed, users will receive the API URLs as output, allowing them to make requests and interact with the system dynamically.
 
-AWS S3 Multi-part Upload: For faster and more efficient handling of large datasets, this project utilizes S3 multi-part upload. This ensures that even the largest survey files can be uploaded in a faster, more reliable way by splitting the data into chunks for parallel upload.
+4. AWS S3 Multi-part Upload: For faster and more efficient handling of large datasets, this project utilizes S3 multi-part upload. This ensures that even the largest survey files can be uploaded in a faster, more reliable way by splitting the data into chunks for parallel upload.
 
 ![Architecture Diagram](./Architecture/architecture.png)
 
@@ -102,7 +102,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     - athena_database_name: The name of the database in AWS Glue to store your processed survey data.
     - athena_table_name: The name of the Athena table where the survey data will be queried.
     - docker_image_uri: The URI of your Docker image from AWS ECR.
-    - headers: The headers of your CSV file. Make sure they follow a consistent naming convention (no special characters), and comment-related columns should start with Comment:.
+    - headers: The headers of your CSV file. Make sure they follow a consistent naming convention (no special characters), and comment-related columns should start with `Comment:`.
 
 - ### Step 3: Deploy the CDK Stack
     After making the necessary changes, you can deploy the CDK stack.
@@ -131,4 +131,4 @@ By following the steps, users can seamlessly process large datasets and receive 
 
     [AWS CDK Documentation](https://docs.aws.amazon.com/cdk/latest/guide/home.html).
 
-    [AWS ECR DOcker Image Upload Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
+    [AWS ECR Docker Image Upload Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
