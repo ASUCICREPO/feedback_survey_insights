@@ -26,25 +26,25 @@ By following the steps, users can seamlessly process large datasets and receive 
 - ### Step 1: Pull and Upload Docker Image to AWS ECR
     We will use a pre-configured Docker image that includes all necessary packages for processing feedback surveys using SageMaker.
 
-    - #### 1.1. Pull Docker Image from DockerHub
+    #### 1.1. Pull Docker Image from DockerHub
     Run the following command to pull the custom Docker image:
 
     ```bash
     docker pull btalachi/processing-sagemaker-image:latest
     ```
-    - #### 1.2. Create an AWS ECR Repository
+    #### 1.2. Create an AWS ECR Repository
     Next, we need to create an ECR repository where this image will be stored.
 
     ```bash
     aws ecr create-repository --repository-name sagemaker-processing-image --region <your-region>
     ```
-    - #### 1.3. Authenticate Docker to ECR
+    #### 1.3. Authenticate Docker to ECR
     You must authenticate Docker to your ECR repository. Run the following command:
 
     ```bash
     aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<your-region>.amazonaws.com
     ```
-    - #### 1.4. Tag and Push Docker Image to ECR
+    #### 1.4. Tag and Push Docker Image to ECR
     Tag your Docker image to match your ECR repository URI:
 
     ```bash
@@ -55,7 +55,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     ```bash
     docker push <aws-account-id>.dkr.ecr.<your-region>.amazonaws.com/sagemaker-processing-image:latest
     ```
-    - #### 1.5. Final ECR Image URI
+    #### 1.5. Final ECR Image URI
     The final Docker image URI in ECR will look like:
 
     ```bash
@@ -65,7 +65,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     You will use this URI in the CDK configuration.
 
 - ### Step 2: Download and Configure the Backend
-    - #### 2.1. Clone the Repository
+    #### 2.1. Clone the Repository
     Clone the GitHub repository to your local environment:
 
     ```bash
@@ -73,7 +73,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     cd feedback-survey-insights
     ```
 
-    - #### 2.2. Modify cdk.json
+    #### 2.2. Modify cdk.json
     Inside the backend folder, you will find a cdk.json file. You need to modify the context variables according to your configuration.
 
     Example cdk.json:
@@ -107,12 +107,12 @@ By following the steps, users can seamlessly process large datasets and receive 
 - ### Step 3: Deploy the CDK Stack
     After making the necessary changes, you can deploy the CDK stack.
 
-    - #### 3.1. Bootstrap AWS CDK (First-Time Setup)
+    #### 3.1. Bootstrap AWS CDK (First-Time Setup)
 
     ```bash
     cdk bootstrap
     ```
-    - #### 3.2. Deploy the Backend Stack
+    #### 3.2. Deploy the Backend Stack
     To deploy the infrastructure:
 
     ```bash
