@@ -9,7 +9,7 @@ This is the Backend of the Feedback Survey Insights project. It processes large 
 3. AWS Lambda & API Gateway: Coordinates workflows, including job initiation, status tracking, and data retrieval via API Gateway, allowing seamless interaction with the system.
 4. AWS S3 Multi-part Upload: Facilitates faster and more efficient handling of large survey datasets by splitting them into smaller parts for parallel upload.
 
-![Architecture Diagram](./Architecture/architecture.png)
+![Architecture Diagram](../Architecture/architecture.png)
 
 This architecture provides an end-to-end solution for processing large datasets, from uploading files to generating insights using machine learning and LLMs. Once deployed, users receive API endpoints that allow them to interact with the system dynamically, including starting data processing jobs, retrieving insights, and checking job statuses.
 
