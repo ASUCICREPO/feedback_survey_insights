@@ -54,7 +54,7 @@ export const API_ENDPOINTS = {
 Make sure you replace `your-api-url.com` with the actual URLs from the backend API outputs.
 
 #### Step 5: Configure Filters 🎛️
-In the `Config.js` file, you can define the filters available for users to refine the survey results. Customize the filter values based on your specific data:
+In the `Config.js` file, define your filters for dynamic filtering in the frontend. Ensure that filter names are lowercase and contain no special characters `(except _ and -)` to be compatible with AWS Athena queries:
 
 ```bash
 export const FILTERS = {
