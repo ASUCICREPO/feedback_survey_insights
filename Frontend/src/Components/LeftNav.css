@@ -1,0 +1,55 @@
+.filter-category {
+  margin-bottom: 8px; /* Reduce space between filter categories */
+  position: relative;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 0;
+  position: relative;
+}
+
+.filter-options {
+  padding-left: 12px;
+  padding-top: 4px;  /* Reduce top padding */
+  padding-bottom: 4px; /* Reduce bottom padding */
+  max-height: 0; /* Start collapsed */
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out; /* Faster transition */
+}
+
+.options-expanded {
+  max-height: 500px; /* Adjust this value based on your content's height */
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #ddd;
+  width: 120%;
+  margin-left: -10%;
+  margin-top: 0;
+  margin-bottom: 0; /* Remove bottom margin */
+  transition: margin-top 0.1s ease-in-out; /* Faster transition for bounce */
+}
+
+.filter-header:hover hr,
+hr.bounce {
+  animation: doubleBounce 0.5s ease-in-out; /* Bounce animation on both open and close */
+}
+
+@keyframes doubleBounce {
+  0%, 100% {
+    margin-top: 0;
+  }
+  25% {
+    margin-top: -12px; /* First, higher bounce */
+  }
+  50% {
+    margin-top: 0; /* Return to original position */
+  }
+  
+}
