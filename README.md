@@ -23,11 +23,11 @@ This system offers a robust end-to-end architecture designed for high-performanc
 - AWS Bedrock: Generate insights and summaries using LLMs.
 - Once the deployment is complete, you can use the API URLs to initiate data processing and retrieve detailed insights and summaries.
 
-🛠️ Setup and Installation
+## 🛠️ Setup and Installation
 
 #### Before you begin, ensure you have the following prerequisites:
 
-## Prerequisites 🔑
+### Prerequisites 🔑
 
 - AWS CLI: Installed and configured with the necessary IAM permissions.
 - AWS CDK: Installed globally on your system.
@@ -50,13 +50,13 @@ cd feedback_survey_insights
 - Frontend Setup: Check out the Frontend README for detailed setup instructions.
 - Backend Setup: Check out the Backend README for detailed setup instructions.
 
-## Frontend Overview 🌐
+### Frontend Overview 🌐
 
 The frontend provides a user-friendly interface for interacting with the Q&A bot, asking questions, applying filters, and visualizing insights. Built using React, it connects with the backend via API calls to retrieve real-time insights and summaries.
 
 For more information on the frontend setup, refer to the [Frontend README](./Frontend/README.md).
 
-## Backend Overview 🏗️
+### Backend Overview 🏗️
 
 The backend is responsible for processing large datasets, utilizing machine learning models through Amazon SageMaker, coordinating workflows via AWS Lambda, and generating insights with LLMs through AWS Bedrock. It also handles S3 multi-part uploads to manage large survey datasets efficiently.
 
