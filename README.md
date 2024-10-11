@@ -65,7 +65,7 @@ By following the steps, users can seamlessly process large datasets and receive 
     You will use this URI in the CDK configuration.
 
 - ### Step 2: Download and Configure the Backend
-    #### 2.1. Clone the Repository
+    #### 2.1. Clone the Repository 🧑‍💻
     Clone the GitHub repository to your local environment:
 
     ```bash
